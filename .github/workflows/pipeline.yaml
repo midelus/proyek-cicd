@@ -63,13 +63,20 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Deploy container
+        shell: powershell
         run: |
-          docker stop web-app || true
-          docker rm web-app || true
+          try { docker stop web-app } catch {}
+          try { docker rm web-app } catch {}
           docker pull ghcr.io/${{ github.repository }}:latest
           docker run -d --name web-app -p ${{ secrets.APP_PORT }}:80 ghcr.io/${{ github.repository }}:latest
           
       - name: Health check
+        shell: powershell
         run: |
-          sleep 3
-          curl -f http://localhost:${{ secrets.APP_PORT }} || exit 1
+          Start-Sleep -Seconds 3
+          try {
+              $response = Invoke-WebRequest -Uri http://localhost:${{ secrets.APP_PORT }} -UseBasicParsing
+              if ($response.StatusCode -ne 200) { exit 1 }
+          } catch {
+              exit 1
+          }
