@@ -54,9 +54,6 @@ jobs:
     needs: build-and-push
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: self-hosted
-    defaults:
-      run:
-        shell: bash
     steps:
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -66,10 +63,23 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Deploy container
+        shell: pwsh
         run: |
-          docker stop web-app || true
-          docker rm web-app || true
+          try { docker stop web-app } catch {}
+          try { docker rm web-app } catch {}
           docker pull ghcr.io/${{ github.repository }}:latest
+          docker run -d --name web-app -p ${{ secrets.APP_PORT }}:80 ghcr.io/${{ github.repository }}:latest
+          
+      - name: Health check
+        shell: pwsh
+        run: |
+          Start-Sleep -Seconds 3
+          try {
+              $response = Invoke-WebRequest -Uri http://localhost:${{ secrets.APP_PORT }} -UseBasicParsing
+              if ($response.StatusCode -ne 200) { exit 1 }
+          } catch {
+              exit 1
+          }
           docker run -d --name web-app -p ${{ secrets.APP_PORT }}:80 ghcr.io/${{ github.repository }}:latest
           
       - name: Health check
