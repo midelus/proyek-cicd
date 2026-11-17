@@ -63,6 +63,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Deploy container
+        shell: powershell
         run: |
           try { docker stop web-app } catch {}
           try { docker rm web-app } catch {}
@@ -70,6 +71,7 @@ jobs:
           docker run -d --name web-app -p ${{ secrets.APP_PORT }}:80 ghcr.io/${{ github.repository }}:latest
           
       - name: Health check
+        shell: powershell
         run: |
           Start-Sleep -Seconds 3
           try {
@@ -77,4 +79,8 @@ jobs:
               if ($response.StatusCode -ne 200) { exit 1 }
           } catch {
               exit 1
+<<<<<<< HEAD
           }
+=======
+          }
+>>>>>>> 4159424 (Menambahkan job deploy ke dalam pipeline CI/CD 4)
