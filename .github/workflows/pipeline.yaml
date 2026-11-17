@@ -79,3 +79,4 @@ jobs:
               if ($response.StatusCode -ne 200) { exit 1 }
           } catch {
               exit 1
+              }
